@@ -65,15 +65,6 @@ class CompoundSegment(BaseSegment):
         if len(constituents) != 0:
             yield cls(constituents=constituents)
 
-    @classmethod
-    def take_last(cls, segments: Sequence[BaseSegment], min_duration: float):
-        constituents = []
-        for segment in reversed(segments):
-            constituents = [segment] + constituents
-            if constituents[-1].end - constituents[0].start >= min_duration:
-                break
-        return cls(constituents)
-
 
 @dataclass(frozen=True)
 class SegmentWithContext(BaseSegment):
@@ -107,10 +98,21 @@ class SegmentWithContext(BaseSegment):
             content = CompoundSegment(content_segments)
             if content.duration >= min_content_duration:
                 yield cls(context=context, content=content)
-                context = CompoundSegment.take_last(
+                context = cls._take_last(
                     segments=[context] + content_segments,
                     min_duration=min_context_duration,
                 )
                 content_segments = []
         if len(content_segments) != 0:
             yield cls(context=context, content=CompoundSegment(content_segments))
+
+    @classmethod
+    def _take_last(cls, segments: Sequence[BaseSegment], min_duration: float):
+        if min_duration == 0:
+            return TextSegment.empty(moment=segments[-1].end)
+        constituents = []
+        for segment in reversed(segments):
+            constituents = [segment] + constituents
+            if constituents[-1].end - constituents[0].start >= min_duration:
+                break
+        return CompoundSegment(constituents)
