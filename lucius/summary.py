@@ -21,8 +21,9 @@ class Summary:
                 [
                     f"- {self.summary}",
                     f"    ",
-                    f"    Start time: {hours:02.0f}:{minutes:02.0f}:{seconds:02.0f}",
-                    f"    {self.segment.content.text}",
+                    f"    `Start time: {hours:02.0f}h {minutes:02.0f}m {seconds:02.0f}s`",
+                    f"    ",
+                    f"    > {self.segment.content.text}",
                 ]
             )
 
