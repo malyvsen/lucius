@@ -88,31 +88,32 @@ class SegmentWithContext(BaseSegment):
     def iterate(
         cls,
         segments: Iterable[BaseSegment],
-        min_context_duration: float,
-        min_content_duration: float,
+        min_context_chars: int,
+        min_content_chars: int,
     ):
         context: BaseSegment = TextSegment.empty(moment=0.0)
         content_segments: list[BaseSegment] = []
         for segment in segments:
             content_segments.append(segment)
             content = CompoundSegment(content_segments)
-            if content.duration >= min_content_duration:
+            if len(content.text) >= min_content_chars:
                 yield cls(context=context, content=content)
                 context = cls._take_last(
                     segments=[context] + content_segments,
-                    min_duration=min_context_duration,
+                    min_chars=min_context_chars,
                 )
                 content_segments = []
         if len(content_segments) != 0:
             yield cls(context=context, content=CompoundSegment(content_segments))
 
     @classmethod
-    def _take_last(cls, segments: Sequence[BaseSegment], min_duration: float):
-        if min_duration == 0:
+    def _take_last(cls, segments: Sequence[BaseSegment], min_chars: int):
+        if min_chars == 0:
             return TextSegment.empty(moment=segments[-1].end)
         constituents = []
         for segment in reversed(segments):
             constituents = [segment] + constituents
-            if constituents[-1].end - constituents[0].start >= min_duration:
-                break
+            compound = CompoundSegment(constituents)
+            if len(compound.text) >= min_chars:
+                return compound
         return CompoundSegment(constituents)

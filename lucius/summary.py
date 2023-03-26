@@ -32,10 +32,10 @@ class Summary:
             cls,
             summarizer: Text2TextGenerationPipeline,
             segment: SegmentWithContext,
-            max_length: int = 64,
+            max_tokens: int,
         ):
             return cls(
-                summary=summarizer(segment.text, max_length=max_length)[0][
+                summary=summarizer(segment.text, max_length=max_tokens)[0][
                     "generated_text"
                 ],
                 segment=segment,

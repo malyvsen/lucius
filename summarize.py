@@ -20,14 +20,16 @@ from lucius import CompoundSegment, SegmentWithContext, Summary
     default=None,
 )
 @click.option("--model-name", default="knkarthick/MEETING_SUMMARY")
-@click.option("--min-context", type=float, default=10.0)
-@click.option("--min-content", type=float, default=60.0)
+@click.option("--min-context", type=float, default=20)
+@click.option("--min-content", type=float, default=800)
+@click.option("--max-summary-tokens", type=int, default=100)
 def main(
     segments_path: Path,
     out_path: Path | None,
     model_name: str,
     min_context: float,
     min_content: float,
+    max_summary_tokens: int,
 ):
     with segments_path.open("rb") as segments_file:
         segments = pickle.load(segments_file)
@@ -35,11 +37,13 @@ def main(
     summarizer = pipeline("text2text-generation", model=model_name)
     sentences = CompoundSegment.assemble_sentences(segments)
     segments_with_context = SegmentWithContext.iterate(
-        sentences, min_context_duration=min_context, min_content_duration=min_content
+        sentences, min_context_chars=min_context, min_content_chars=min_content
     )
     summary = Summary(
         [
-            Summary.Fragment.generate(summarizer=summarizer, segment=segment)
+            Summary.Fragment.generate(
+                summarizer=summarizer, segment=segment, max_tokens=max_summary_tokens
+            )
             for segment in tqdm(list(segments_with_context), desc="Summarizing")
         ]
     )
