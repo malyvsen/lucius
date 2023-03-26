@@ -10,6 +10,10 @@ class BaseSegment:
     end: float = field(init=False)
     text: str = field(init=False)
 
+    @property
+    def duration(self):
+        return self.end - self.start
+
 
 @dataclass(frozen=True)
 class TextSegment(BaseSegment):
@@ -43,7 +47,19 @@ class CompoundSegment(BaseSegment):
         return " ".join(segment.text for segment in self.constituents)
 
     @classmethod
-    def combine_sentences(cls, segments: Iterable[BaseSegment]):
+    def combine_segments(cls, segments: Iterable[BaseSegment], min_duration: float):
+        constituents: list[BaseSegment] = []
+        for segment in segments:
+            constituents.append(segment)
+            candidate = cls(constituents=constituents)
+            if candidate.duration >= min_duration:
+                yield candidate
+                constituents = []
+        if len(constituents) != 0:
+            yield cls(constituents=constituents)
+
+    @classmethod
+    def assemble_sentences(cls, segments: Iterable[BaseSegment]):
         constituents: list[BaseSegment] = []
         for segment in segments:
             constituents.append(segment)

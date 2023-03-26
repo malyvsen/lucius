@@ -18,10 +18,10 @@ def main(segments_path: Path):
         segments = pickle.load(segments_file)
 
     summarizer = pipeline("text2text-generation", model="knkarthick/MEETING_SUMMARY")
-    for sentence in CompoundSegment.combine_sentences(segments):
-        summary = summarizer(f"Lecturer: {sentence.text}", max_length=64)[0][
-            "generated_text"
-        ]
+    sentences = CompoundSegment.assemble_sentences(segments)
+    paragraphs = CompoundSegment.combine_segments(sentences, min_duration=60)
+    for paragraph in paragraphs:
+        summary = summarizer(paragraph.text, max_length=64)[0]["generated_text"]
         print(summary)
 
 
