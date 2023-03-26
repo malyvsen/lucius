@@ -16,7 +16,7 @@ from lucius import CompoundSegment, SegmentWithContext, Summary
 )
 @click.option(
     "--out-path",
-    type=click.Path(file_okay=False, dir_okay=False, writable=True, path_type=Path),
+    type=click.Path(dir_okay=False, writable=True, path_type=Path),
     default=None,
 )
 @click.option("--model-name", default="knkarthick/MEETING_SUMMARY")

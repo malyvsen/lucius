@@ -12,7 +12,7 @@ import click
 )
 @click.option(
     "--out-path",
-    type=click.Path(file_okay=False, dir_okay=False, writable=True, path_type=Path),
+    type=click.Path(dir_okay=False, writable=True, path_type=Path),
     default=None,
 )
 def main(summary_path: Path, out_path: Path | None):
