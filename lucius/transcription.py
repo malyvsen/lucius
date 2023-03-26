@@ -3,6 +3,8 @@ from pathlib import Path
 from faster_whisper import WhisperModel, decode_audio
 from tqdm import tqdm
 
+from .segments import TextSegment
+
 
 def transcribe(model: WhisperModel, audio_path: Path):
     audio = decode_audio(
@@ -19,6 +21,6 @@ def transcribe(model: WhisperModel, audio_path: Path):
     )
     for segment in segments:
         loading_bar.update(segment.end - loading_bar.n)
-        yield segment
+        yield TextSegment.from_whisper_segment(segment)
     loading_bar.update(duration - loading_bar.n)
     loading_bar.close()
