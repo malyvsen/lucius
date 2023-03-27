@@ -8,8 +8,8 @@ from lucius import transcribe
 
 
 @click.command()
-@click.option(
-    "--in-path",
+@click.argument(
+    "audio-path",
     type=click.Path(exists=True, dir_okay=False, readable=True, path_type=Path),
     required=True,
 )
@@ -18,19 +18,25 @@ from lucius import transcribe
     type=click.Path(dir_okay=False, writable=True, path_type=Path),
     default=None,
 )
-@click.option("--model-name", default="medium.en")
+@click.option("--language", default="en")
+@click.option("--model-name", default="large-v2")
 @click.option("--device", default="cpu")
 @click.option("--precision", default="int8")
 def main(
-    in_path: Path, out_path: Path | None, model_name: str, device: str, precision: str
+    audio_path: Path,
+    out_path: Path | None,
+    language: str,
+    model_name: str,
+    device: str,
+    precision: str,
 ):
     model = WhisperModel(model_name, device=device, compute_type=precision)
-    segments = transcribe(model=model, audio_path=in_path)
+    segments = transcribe(model=model, audio_path=audio_path, language=language)
 
     if out_path is None:
-        out_path = Path.cwd() / f"{in_path.stem}-segments.pkl"
-    with out_path.open("wb") as segments_file:
-        pickle.dump(list(segments), segments_file)
+        out_path = Path.cwd() / f"{audio_path.stem}-transcript.pkl"
+    with out_path.open("wb") as out_file:
+        pickle.dump(list(segments), out_file)
 
 
 main()

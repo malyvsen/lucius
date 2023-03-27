@@ -1,7 +1,7 @@
 from .segments import CompoundSegment, SegmentWithContext, TextSegment
 from .slideshow import Slideshow
 from .summary import Summary
-from .transcription import transcribe
+from .transcript import Transcript
 
 __all__ = [
     "CompoundSegment",
@@ -9,5 +9,5 @@ __all__ = [
     "TextSegment",
     "Slideshow",
     "Summary",
-    "transcribe",
+    "Transcript",
 ]

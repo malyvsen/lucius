@@ -6,7 +6,7 @@ import click
 
 @click.command()
 @click.argument(
-    "summary-path",
+    "in-path",
     type=click.Path(exists=True, dir_okay=False, readable=True, path_type=Path),
     required=True,
 )
@@ -15,13 +15,13 @@ import click
     type=click.Path(dir_okay=False, writable=True, path_type=Path),
     default=None,
 )
-def main(summary_path: Path, out_path: Path | None):
-    with summary_path.open("rb") as summary_file:
-        summary = pickle.load(summary_file)
+def main(in_path: Path, out_path: Path | None):
+    with in_path.open("rb") as in_file:
+        to_export = pickle.load(in_file)
 
     if out_path is None:
-        out_path = Path.cwd() / (f"{summary_path.stem}.md")
-    out_path.write_text(summary.markdown)
+        out_path = Path.cwd() / (f"{in_path.stem}.md")
+    out_path.write_text(to_export.markdown)
 
 
 main()

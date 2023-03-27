@@ -10,7 +10,7 @@ from lucius import CompoundSegment, SegmentWithContext, Summary
 
 @click.command()
 @click.argument(
-    "segments-path",
+    "transcript-path",
     type=click.Path(exists=True, dir_okay=False, readable=True, path_type=Path),
     required=True,
 )
@@ -24,18 +24,18 @@ from lucius import CompoundSegment, SegmentWithContext, Summary
 @click.option("--min-content", type=float, default=800)
 @click.option("--max-summary-tokens", type=int, default=100)
 def main(
-    segments_path: Path,
+    transcript_path: Path,
     out_path: Path | None,
     model_name: str,
     min_context: float,
     min_content: float,
     max_summary_tokens: int,
 ):
-    with segments_path.open("rb") as segments_file:
-        segments = pickle.load(segments_file)
+    with transcript_path.open("rb") as transcript_file:
+        transcript = pickle.load(transcript_file)
 
     summarizer = pipeline("text2text-generation", model=model_name)
-    sentences = CompoundSegment.assemble_sentences(segments)
+    sentences = CompoundSegment.assemble_sentences(transcript.segments)
     segments_with_context = SegmentWithContext.iterate(
         sentences, min_context_chars=min_context, min_content_chars=min_content
     )
@@ -49,7 +49,7 @@ def main(
     )
     if out_path is None:
         out_path = Path.cwd() / (
-            segments_path.stem.replace("-segments", "") + "-summary.pkl"
+            transcript_path.stem.replace("-transcript", "") + "-summary.pkl"
         )
     with out_path.open("wb") as out_file:
         pickle.dump(summary, out_file)
