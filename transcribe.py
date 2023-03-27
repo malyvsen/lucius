@@ -4,7 +4,7 @@ from pathlib import Path
 import click
 from faster_whisper import WhisperModel
 
-from lucius import transcribe
+from lucius import Transcript
 
 
 @click.command()
@@ -31,12 +31,14 @@ def main(
     precision: str,
 ):
     model = WhisperModel(model_name, device=device, compute_type=precision)
-    segments = transcribe(model=model, audio_path=audio_path, language=language)
+    transcript = Transcript.from_audio_file(
+        model=model, language=language, audio_path=audio_path
+    )
 
     if out_path is None:
         out_path = Path.cwd() / f"{audio_path.stem}-transcript.pkl"
     with out_path.open("wb") as out_file:
-        pickle.dump(list(segments), out_file)
+        pickle.dump(transcript, out_file)
 
 
 main()
