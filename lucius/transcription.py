@@ -17,7 +17,7 @@ def transcribe(model: WhisperModel, audio_path: Path):
         desc="Transcribing",
         total=duration,
         bar_format="{l_bar}{bar}| {n:.0f}s/{total:.0f}s [{elapsed}<{remaining}, {rate_fmt}{postfix}]",
-        unit="s",
+        unit="second of audio",
     )
     for segment in segments:
         loading_bar.update(segment.end - loading_bar.n)
