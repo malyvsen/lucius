@@ -31,8 +31,9 @@ class Transcript:
             bar_format="{l_bar}{bar}| {n:.0f}s/{total:.0f}s [{elapsed}<{remaining}, {rate_fmt}{postfix}]",
             unit="second of audio",
         )
-        loading_bar.refresh()
         for segment in segment_iterable:
+            if segment.end > duration:
+                break  # Whisper hallucinates text at the end sometimes
             loading_bar.update(segment.end - loading_bar.n)
             segments.append(TextSegment.from_whisper_segment(segment))
         loading_bar.update(duration - loading_bar.n)
