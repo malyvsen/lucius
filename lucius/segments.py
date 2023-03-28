@@ -37,33 +37,24 @@ class TextSegment(BaseSegment):
             text=whisper_segment.text.strip(),
         )
 
-
-@dataclass(frozen=True)
-class CompoundSegment(BaseSegment):
-    constituents: list[BaseSegment]
-
-    @property
-    def start(self):
-        return self.constituents[0].start
-
-    @property
-    def end(self):
-        return self.constituents[-1].end
-
-    @property
-    def text(self):
-        return " ".join(segment.text for segment in self.constituents)
+    @classmethod
+    def join(cls, segments: list[BaseSegment]):
+        return cls(
+            start=segments[0].start,
+            end=segments[-1].end,
+            text=" ".join(segment.text for segment in segments),
+        )
 
     @classmethod
-    def assemble_sentences(cls, segments: Iterable[BaseSegment]):
+    def iterate_sentences(cls, segments: Iterable[BaseSegment]):
         constituents: list[BaseSegment] = []
         for segment in segments:
             constituents.append(segment)
             if any(segment.text.endswith(symbol) for symbol in ".?!"):
-                yield cls(constituents=constituents)
+                yield cls.join(constituents)
                 constituents = []
         if len(constituents) != 0:
-            yield cls(constituents=constituents)
+            yield cls.join(constituents)
 
 
 @dataclass(frozen=True)
@@ -95,7 +86,7 @@ class SegmentWithContext(BaseSegment):
         content_segments: list[BaseSegment] = []
         for segment in segments:
             content_segments.append(segment)
-            content = CompoundSegment(content_segments)
+            content = TextSegment.join(content_segments)
             if len(content.text) >= min_content_chars:
                 yield cls(context=context, content=content)
                 context = cls._take_last(
@@ -104,7 +95,7 @@ class SegmentWithContext(BaseSegment):
                 )
                 content_segments = []
         if len(content_segments) != 0:
-            yield cls(context=context, content=CompoundSegment(content_segments))
+            yield cls(context=context, content=TextSegment.join(content_segments))
 
     @classmethod
     def _take_last(cls, segments: Sequence[BaseSegment], min_chars: int):
@@ -113,7 +104,7 @@ class SegmentWithContext(BaseSegment):
         constituents = []
         for segment in reversed(segments):
             constituents = [segment] + constituents
-            compound = CompoundSegment(constituents)
+            compound = TextSegment.join(constituents)
             if len(compound.text) >= min_chars:
                 return compound
-        return CompoundSegment(constituents)
+        return TextSegment.join(constituents)

@@ -5,7 +5,7 @@ import click
 from tqdm import tqdm
 from transformers import pipeline
 
-from lucius import CompoundSegment, SegmentWithContext, Summary
+from lucius import SegmentWithContext, Summary, TextSegment, Transcript
 
 
 @click.command()
@@ -32,10 +32,10 @@ def main(
     max_summary_tokens: int,
 ):
     with transcript_path.open("rb") as transcript_file:
-        transcript = pickle.load(transcript_file)
+        transcript: Transcript = pickle.load(transcript_file)
 
     summarizer = pipeline("text2text-generation", model=model_name)
-    sentences = CompoundSegment.assemble_sentences(transcript.segments)
+    sentences = TextSegment.iterate_sentences(transcript.segments)
     segments_with_context = SegmentWithContext.iterate(
         sentences, min_context_chars=min_context, min_content_chars=min_content
     )
