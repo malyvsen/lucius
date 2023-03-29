@@ -20,7 +20,15 @@ class BaseSegment:
 
     @property
     def html(self):
-        return f"<p>{self.text}</p>"
+        hours = self.start // 3600
+        minutes = (self.start % 3600) // 60
+        seconds = self.start % 60
+        return f"""
+            <p>Start time: <code>{hours:02.0f}h {minutes:02.0f}m {seconds:02.0f}s</code></p>
+            <div>
+                <p>{self.text}</p>
+            </div>
+        """
 
 
 @dataclass(frozen=True)

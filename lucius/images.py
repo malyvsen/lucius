@@ -7,29 +7,32 @@ import numpy as np
 from numpy.typing import NDArray
 from PIL import Image as PIL_Image
 
+from .embedder import Embedder
+
 
 @dataclass(frozen=True)
 class Image:
-    data: bytes
-
-    @cached_property
-    def pil_image(self):
-        return PIL_Image.open(BytesIO(self.data))
+    pil_image: PIL_Image.Image
 
     @cached_property
     def html(self):
         buffer = BytesIO()
         self.pil_image.save(buffer, format="PNG")
         encoding = base64.b64encode(buffer.getvalue()).decode()
-        return f"<aside><img src=data:image/png;base64,{encoding}></aside>"
+        return f"<img src=data:image/png;base64,{encoding}>"
+
+    @classmethod
+    def from_data(cls, data: bytes):
+        return cls(pil_image=PIL_Image.open(BytesIO(data)))
 
 
 @dataclass(frozen=True)
 class EmbeddedImage(Image):
     embedding: NDArray
 
-    def __eq__(self, other: "EmbeddedImage"):
-        return self.data == other.data and np.all(self.embedding == other.embedding)
-
-    def __hash__(self):
-        return hash((self.data, tuple(self.embedding)))
+    @classmethod
+    def from_image(cls, image: Image, embedder: Embedder):
+        return cls(
+            pil_image=image.pil_image,
+            embedding=embedder.embed_image(image.pil_image),
+        )
