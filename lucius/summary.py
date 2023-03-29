@@ -1,7 +1,9 @@
 from dataclasses import dataclass
 
+from numpy.typing import NDArray
 from transformers import Text2TextGenerationPipeline
 
+from .images import Image
 from .segments import SegmentWithContext
 
 
@@ -40,6 +42,14 @@ class Summary:
                 ],
                 segment=segment,
             )
+
+    @dataclass(frozen=True)
+    class EmbeddedFragment(Fragment):
+        embedding: NDArray
+
+    @dataclass(frozen=True)
+    class IllustratedFragment(EmbeddedFragment):
+        images: list[Image]
 
     fragments: list[Fragment]
 
