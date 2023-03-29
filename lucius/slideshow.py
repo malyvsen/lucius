@@ -53,11 +53,25 @@ class Slideshow:
 
         @property
         def html(self):
+            image_html = "\n".join(image.html for image in self.images)
+            image_details = (
+                f"""
+                    <details>
+                        <summary>Extracted images</summary>
+                        {image_html}
+                    </details>
+                """
+                if len(self.images) > 0
+                else "<p>No images</p>"
+            )
             fragment_html = "\n".join(
                 fragment.html for fragment in self.summary_fragments
             )
             return f"""
-                <p><aside>{self.render.html}</aside></p>
+                <aside>
+                    {self.render.html}
+                    {image_details}
+                </aside>
                 {fragment_html}
             """
 

@@ -58,7 +58,9 @@ class Summary:
 
         @property
         def html(self):
-            image_html = "<p>" + "\n".join(image.html for image in self.images) + "</p>"
+            image_html = "\n".join(
+                f"<aside>{image.html}</aside>" for image in self.images
+            )
             return f"""
                 <details>
                     <summary>{self.summary}</summary>
