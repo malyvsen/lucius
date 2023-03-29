@@ -25,7 +25,7 @@ class Slideshow:
         def from_pdf_page(cls, render: Image, pdf_page: PageObject):
             try:
                 pdf_images = pdf_page.images
-            except ValueError:
+            except (ValueError, OSError):
                 pdf_images = []
             return cls(
                 render=render,
@@ -35,16 +35,13 @@ class Slideshow:
     @dataclass(frozen=True)
     class EmbeddedSlide(Slide):
         render: EmbeddedImage
-        images: list[EmbeddedImage]
+        images: list[Image]
 
         @classmethod
         def from_slide(cls, slide: "Slideshow.Slide", embedder: Embedder):
             return cls(
                 render=EmbeddedImage.from_image(slide.render, embedder=embedder),
-                images=[
-                    EmbeddedImage.from_image(image, embedder=embedder)
-                    for image in slide.images
-                ],
+                images=slide.images,
             )
 
     @dataclass(frozen=True)
