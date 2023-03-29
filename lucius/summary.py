@@ -1,10 +1,8 @@
 from dataclasses import dataclass
 
-import numpy as np
 from numpy.typing import NDArray
 from transformers import Text2TextGenerationPipeline
 
-from .images import Image
 from .segments import BaseSegment
 
 
@@ -41,33 +39,6 @@ class Summary:
     @dataclass(frozen=True)
     class EmbeddedFragment(Fragment):
         embedding: NDArray
-
-        def __eq__(self, other: "Summary.EmbeddedFragment"):
-            return (
-                self.summary == other.summary
-                and self.segment == other.segment
-                and np.all(self.embedding == other.embedding)
-            )
-
-        def __hash__(self):
-            return hash((self.summary, self.segment, tuple(self.embedding)))
-
-    @dataclass(frozen=True)
-    class IllustratedFragment(EmbeddedFragment):
-        images: list[Image]
-
-        @property
-        def html(self):
-            image_html = "\n".join(
-                f"<aside>{image.html}</aside>" for image in self.images
-            )
-            return f"""
-                <details>
-                    <summary>{self.summary}</summary>
-                    {self.segment.html}
-                    {image_html}
-                </details>
-            """
 
     fragments: list[Fragment]
 
