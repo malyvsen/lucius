@@ -4,7 +4,7 @@ from pathlib import Path
 
 import click
 import numpy as np
-from tqdm import tqdm
+from tqdm import tqdm, trange
 
 from lucius import EmbeddedImage, Embedder, Slideshow, Summary
 
@@ -27,14 +27,14 @@ from lucius import EmbeddedImage, Embedder, Slideshow, Summary
 )
 @click.option("--model-name", default="ViT-H-14")
 @click.option("--pretraining", default="laion2b_s32b_b79k")
-@click.option("--tolerance", type=float, default=0.25)
+@click.option("--num-attempts", type=int, default=100_000)
 def main(
     pdf_path: Path,
     summary_path: Path,
     out_path: Path | None,
     model_name: str,
     pretraining: str,
-    tolerance: float,
+    num_attempts: int,
 ):
     with pdf_path.open("rb") as pdf_file:
         slideshow = Slideshow.from_pdf(pdf_file)
@@ -56,68 +56,51 @@ def main(
         for fragment in tqdm(summary.fragments, desc="Embedding summary")
     ]
 
-    matched_fragments = [[] for slide in embedded_slides]
-    slide_idx = 0
-    for fragment_idx, fragment in enumerate(embedded_fragments):
-        target_proportion = fragment_idx / len(embedded_fragments)
-        if slide_idx / len(embedded_slides) < target_proportion - tolerance:
-            slide_idx = int(target_proportion * len(embedded_slides))
-        slide_idx = max(
-            range(
-                slide_idx,
-                min(
-                    slide_idx + int(tolerance * len(embedded_slides)),
-                    len(embedded_slides),
-                ),
-            ),
-            key=lambda candidate_idx: np.dot(
-                embedded_slides[candidate_idx].render.embedding, fragment.embedding
-            ),
+    def random_alignment() -> list[int]:
+        steps = np.random.uniform(low=0, high=1, size=len(embedded_fragments))
+        unbound_indices = np.cumsum(steps)
+        return (
+            np.round(unbound_indices / unbound_indices[-1] * (len(embedded_slides) - 1))
+            .astype(int)
+            .tolist()
         )
-        matched_fragments[slide_idx].append(fragment)
 
+    best_alignment = max(
+        (
+            random_alignment()
+            for attempt in trange(num_attempts, desc="Searching alignments")
+        ),
+        key=lambda alignment: sum(
+            np.dot(
+                embedded_slides[slide_idx].render.embedding,
+                embedded_fragments[fragment_idx].embedding,
+            )
+            for fragment_idx, slide_idx in enumerate(alignment)
+        ),
+    )
+
+    aligned_fragments: list[list[Summary.EmbeddedFragment]] = [
+        [] for slide in embedded_slides
+    ]
+    for idx, fragment in zip(best_alignment, embedded_fragments):
+        aligned_fragments[idx].append(fragment)
     summarized_slideshow = Slideshow(
         slides=[
             Slideshow.SummarizedSlide(
                 render=slide.render,
                 images=slide.images,
-                summary_fragments=distribute_images(
-                    fragments=fragments, images=slide.images
-                ),
+                summary_fragments=fragments,
             )
-            for slide, fragments in zip(embedded_slides, matched_fragments)
+            for slide, fragments in zip(embedded_slides, aligned_fragments)
         ]
     )
 
     if out_path is None:
         out_path = Path.cwd() / (
-            summary_path.stem.replace("-summary", "") + "-aligned.pkl"
+            summary_path.stem.replace("-summary", "") + "-illustrated.pkl"
         )
     with out_path.open("wb") as out_file:
         pickle.dump(summarized_slideshow, out_file)
-
-
-def distribute_images(
-    fragments: list[Summary.EmbeddedFragment], images: list[EmbeddedImage]
-):
-    if len(fragments) == 0:
-        return []
-
-    def best_match(image: EmbeddedImage):
-        return max(
-            fragments,
-            key=lambda fragment: np.dot(image.embedding, fragment.embedding),
-        )
-
-    return [
-        Summary.IllustratedFragment(
-            summary=fragment.summary,
-            segment=fragment.segment,
-            embedding=fragment.embedding,
-            images=[image for image in images if best_match(image) is fragment],
-        )
-        for fragment in fragments
-    ]
 
 
 main()
