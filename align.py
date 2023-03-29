@@ -27,12 +27,14 @@ from lucius import EmbeddedImage, Embedder, Slideshow, Summary
 )
 @click.option("--model-name", default="ViT-H-14")
 @click.option("--pretraining", default="laion2b_s32b_b79k")
+@click.option("--tolerance", type=float, default=0.25)
 def main(
     pdf_path: Path,
     summary_path: Path,
     out_path: Path | None,
     model_name: str,
     pretraining: str,
+    tolerance: float,
 ):
     with pdf_path.open("rb") as pdf_file:
         slideshow = Slideshow.from_pdf(pdf_file)
@@ -58,10 +60,16 @@ def main(
     slide_idx = 0
     for fragment_idx, fragment in enumerate(embedded_fragments):
         target_proportion = fragment_idx / len(embedded_fragments)
-        if slide_idx / len(embedded_slides) < target_proportion - 0.1:
+        if slide_idx / len(embedded_slides) < target_proportion - tolerance:
             slide_idx = int(target_proportion * len(embedded_slides))
         slide_idx = max(
-            range(slide_idx, min(slide_idx + 2, len(embedded_slides))),
+            range(
+                slide_idx,
+                min(
+                    slide_idx + int(tolerance * len(embedded_slides)),
+                    len(embedded_slides),
+                ),
+            ),
             key=lambda candidate_idx: np.dot(
                 embedded_slides[candidate_idx].render.embedding, fragment.embedding
             ),
