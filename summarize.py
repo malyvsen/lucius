@@ -19,10 +19,10 @@ from lucius import SegmentWithContext, Summary, TextSegment, Transcript
     type=click.Path(dir_okay=False, writable=True, path_type=Path),
     default=None,
 )
-@click.option("--model-name", default="knkarthick/MEETING_SUMMARY")
-@click.option("--min-context", type=float, default=20)
+@click.option("--model-name", default="philschmid/bart-large-cnn-samsum")
+@click.option("--min-context", type=float, default=0)
 @click.option("--min-content", type=float, default=800)
-@click.option("--max-summary-tokens", type=int, default=100)
+@click.option("--max-summary-tokens", type=int, default=200)
 def main(
     transcript_path: Path,
     out_path: Path | None,
