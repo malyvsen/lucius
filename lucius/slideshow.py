@@ -15,9 +15,11 @@ class Slideshow:
 
         @classmethod
         def from_pdf_page(cls, pdf_page: PageObject):
-            return cls(
-                images=[Image(data=pdf_image.data) for pdf_image in pdf_page.images],
-            )
+            try:
+                pdf_images = pdf_page.images
+            except ValueError:
+                pdf_images = []
+            return cls(images=[Image(data=pdf_image.data) for pdf_image in pdf_images])
 
     pages: list[Page]
 
