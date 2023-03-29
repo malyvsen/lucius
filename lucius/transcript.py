@@ -13,8 +13,8 @@ class Transcript:
     segments: list[TextSegment]
 
     @property
-    def markdown(self):
-        return "\n".join(segment.text for segment in self.segments)
+    def html(self):
+        return "\n".join(segment.html for segment in self.segments)
 
     @classmethod
     def from_audio_file(cls, model: WhisperModel, language: str, audio_path: Path):

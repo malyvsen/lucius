@@ -18,6 +18,10 @@ class BaseSegment:
     def legible(self):
         return f"[{self.start} => {self.end}] {self.text}"
 
+    @property
+    def html(self):
+        return f"<p>{self.text}</p>"
+
 
 @dataclass(frozen=True)
 class TextSegment(BaseSegment):
