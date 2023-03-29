@@ -4,6 +4,7 @@ from .segments import SegmentWithContext, TextSegment
 from .slideshow import Slideshow
 from .summary import Summary
 from .transcript import Transcript
+from .webpage import Webpage
 
 __all__ = [
     "Embedder",
@@ -14,4 +15,5 @@ __all__ = [
     "Slideshow",
     "Summary",
     "Transcript",
+    "Webpage",
 ]

@@ -14,21 +14,6 @@ class Summary:
         summary: str
         segment: SegmentWithContext
 
-        @property
-        def markdown(self):
-            hours = self.segment.content.start // 3600
-            minutes = (self.segment.content.start % 3600) // 60
-            seconds = self.segment.content.start % 60
-            return "\n".join(
-                [
-                    f"- {self.summary}",
-                    f"    ",
-                    f"    `Start time: {hours:02.0f}h {minutes:02.0f}m {seconds:02.0f}s`",
-                    f"    ",
-                    f"    > {self.segment.content.text}",
-                ]
-            )
-
         @classmethod
         def generate(
             cls,
@@ -51,8 +36,25 @@ class Summary:
     class IllustratedFragment(EmbeddedFragment):
         images: list[Image]
 
+        @property
+        def html(self):
+            hours = self.segment.content.start // 3600
+            minutes = (self.segment.content.start % 3600) // 60
+            seconds = self.segment.content.start % 60
+            image_html = "<p>" + "\n".join(image.html for image in self.images) + "</p>"
+            return f"""
+<details>
+    <summary>{self.summary}</summary>
+    <p>Start time: <code>{hours:02.0f}h {minutes:02.0f}m {seconds:02.0f}s</code></p>
+    <div>
+        <p>{self.segment.content.text}</p>
+    </div>
+</details>
+{image_html}
+        """.strip()
+
     fragments: list[Fragment]
 
     @property
-    def markdown(self):
-        return "\n\n".join(fragment.markdown for fragment in self.fragments)
+    def html(self):
+        return "\n".join(fragment.html for fragment in self.fragments)
